@@ -1,0 +1,79 @@
+name: Update headlessmc
+
+# Rebuilds the apt repository with the latest HeadlessMc releases, installs and tests it on amd64 and arm64
+# and only then deploys it to GitHub Pages at https://headlesshq.github.io/apt/.
+# The repository is not stored in git, every run builds it from the GitHub releases again.
+#
+# Deploying requires:
+#   - the repository variable APT_PAGES_ENABLED set to true, once the repository is public
+#     and Pages is set to deploy from GitHub Actions,
+#   - the secret APT_SIGNING_KEY (ASCII armored private key) and optionally APT_SIGNING_PASSPHRASE.
+
+on:
+  # sent by the release job of headlesshq/headlessmc
+  repository_dispatch:
+    types: [ headlessmc-release ]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag of headlesshq/headlessmc to include even if it is not one of the latest releases
+        required: false
+      publish:
+        description: Deploy the tested repository (disable to only test)
+        type: boolean
+        default: true
+  # fallback in case a dispatch got lost
+  schedule:
+    - cron: '17 4 * * *'
+
+concurrency:
+  group: update-headlessmc
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    uses: ./.github/workflows/build.yml
+    with:
+      tag: ${{ github.event.client_payload.tag || inputs.tag || '' }}
+      # manual runs always rebuild, e.g. after rotating the signing key
+      skip-unchanged: ${{ github.event_name != 'workflow_dispatch' }}
+    secrets: inherit
+
+  publish:
+    needs: build
+    # inputs.publish is only set for manual runs
+    if: >-
+      needs.build.outputs.changed == 'true'
+      && inputs.publish != false
+      && vars.APT_PAGES_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - name: Check signing key
+        if: needs.build.outputs.ephemeral == 'true'
+        run: |
+          echo "::error::APT_SIGNING_KEY is not set, refusing to deploy a repository signed with a throwaway key"
+          exit 1
+
+      - name: Download repository
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          name: apt-repository
+          path: site
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+        with:
+          path: site
+
+      - name: Deploy to GitHub Pages
+        id: deploy
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5

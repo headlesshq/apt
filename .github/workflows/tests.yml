@@ -1,0 +1,21 @@
+name: Test repository
+
+# Builds the repository with the two latest releases, so upgrading from one to the other is tested too,
+# and installs it in Debian and Ubuntu containers. Never deploys.
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    uses: ./.github/workflows/build.yml
+    with:
+      keep: 2
+    # pull requests from forks get no secrets, then the repository is signed with a throwaway key
+    secrets: inherit
