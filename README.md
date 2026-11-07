@@ -15,11 +15,6 @@ sudo apt install headlessmc
 
 ```shell
 sudo apt remove headlessmc
-```
-
-To also remove the repository:
-
-```shell
 sudo rm /etc/apt/sources.list.d/headlesshq.sources /etc/apt/keyrings/headlesshq.gpg
 sudo apt update
 ```
