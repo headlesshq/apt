@@ -87,6 +87,9 @@ depends:
   - zlib1g
 recommends:
   - bash-completion
+# smaller than the default gzip, GitHub Pages has a size and a bandwidth limit
+deb:
+  compression: xz
 contents:
   - src: $work/headlessmc
     dst: /usr/bin/headlessmc

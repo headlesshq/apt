@@ -14,7 +14,7 @@ on:
       keep:
         description: Number of the latest releases the repository contains
         type: number
-        default: 3
+        default: 2
       skip-unchanged:
         description: Skip building if the deployed repository already contains exactly these releases
         type: boolean

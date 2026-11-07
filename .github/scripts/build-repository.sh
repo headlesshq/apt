@@ -6,6 +6,8 @@
 #   APT_SIGNING_KEY         ASCII armored private key that signs the repository.
 #   APT_SIGNING_PASSPHRASE  its passphrase, if it has one.
 #   ALLOW_EPHEMERAL_KEY     if "true" and APT_SIGNING_KEY is empty, signs with a new throwaway key, for tests.
+#   MAX_SITE_MB             fails if the site is larger than this (default 800), GitHub Pages sites may be
+#                           at most 1 GB, so new packages or architectures cannot silently break deployments.
 # Requires: apt-ftparchive (apt-utils), gpg, gzip.
 set -euo pipefail
 
@@ -22,6 +24,15 @@ fi
 site="$(realpath "$1")"
 shift
 cd "$site"
+
+max_mb="${MAX_SITE_MB:-800}"
+size_mb="$(du -sm . | cut -f1)"
+echo "The site is $size_mb MB (limit $max_mb MB)" >&2
+if (( size_mb > max_mb )); then
+  echo "The site is larger than $max_mb MB, keep fewer releases (KEEP) or raise MAX_SITE_MB up to the 1 GB limit of GitHub Pages:" >&2
+  du -sh pool/*/*/* >&2
+  exit 1
+fi
 
 GNUPGHOME="$(mktemp -d)"
 export GNUPGHOME
