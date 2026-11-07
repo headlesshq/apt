@@ -10,3 +10,16 @@ curl -fsSL https://headlesshq.github.io/apt/headlesshq.sources | sudo tee /etc/a
 sudo apt update
 sudo apt install headlessmc
 ```
+
+### Uninstall
+
+```shell
+sudo apt remove headlessmc
+```
+
+To also remove the repository:
+
+```shell
+sudo rm /etc/apt/sources.list.d/headlesshq.sources /etc/apt/keyrings/headlesshq.gpg
+sudo apt update
+```
