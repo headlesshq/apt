@@ -28,7 +28,10 @@ else
 fi
 
 dpkg-query -W headlessmc
-installed="$(headlessmc --version)"
+# "HeadlessMc <version>" (only "<version>" up to 3.0.0-RC8), followed by a notice if a newer release is available
+output="$(headlessmc --version)"
+installed="${output%%$'\n'*}"
+installed="${installed#HeadlessMc }"
 if [[ "$installed" != "$newest" ]]; then
   echo "Expected headlessmc $newest, but got $installed" >&2
   exit 1
