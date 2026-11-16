@@ -78,6 +78,13 @@ jobs:
           tar -xzf "$RUNNER_TEMP/nfpm.tar.gz" -C "$RUNNER_TEMP" nfpm
           echo "$RUNNER_TEMP" >> "$GITHUB_PATH"
 
+      # apt-ftparchive is not preinstalled on the ubuntu-26.04 runners
+      - name: Install apt-utils
+        if: steps.select.outputs.changed == 'true'
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y -q apt-utils
+
       - name: Build repository
         id: build
         if: steps.select.outputs.changed == 'true'

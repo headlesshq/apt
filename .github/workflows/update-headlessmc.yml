@@ -44,10 +44,10 @@ jobs:
 
   publish:
     needs: build
-    # inputs.publish is only set for manual runs
+    # inputs.publish is only set for manual runs, without one it is empty, which equals false in expressions
     if: >-
       needs.build.outputs.changed == 'true'
-      && inputs.publish != false
+      && (github.event_name != 'workflow_dispatch' || inputs.publish)
       && vars.APT_PAGES_ENABLED == 'true'
     runs-on: ubuntu-latest
     permissions:
